@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
+using System.Text.Json.Serialization;
 
 namespace EventosApi
 {
@@ -13,6 +14,8 @@ namespace EventosApi
 
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddControllers().AddJsonOptions(x =>
+            x.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles);
             services.AddControllers();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             services.AddDbContext<ApplicationDbContext>(options =>
@@ -26,6 +29,7 @@ namespace EventosApi
         }
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
+           
             // Configure the HTTP request pipeline.
             if (env.IsDevelopment())
             {
