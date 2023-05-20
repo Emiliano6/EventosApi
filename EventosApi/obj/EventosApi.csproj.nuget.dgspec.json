@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\Usuario\\source\\repos\\EventosApi\\EventosApi\\EventosApi.csproj": {}
+    "C:\\Users\\Usuario\\Source\\Repos\\EventosApi\\EventosApi\\EventosApi.csproj": {}
   },
   "projects": {
-    "C:\\Users\\Usuario\\source\\repos\\EventosApi\\EventosApi\\EventosApi.csproj": {
+    "C:\\Users\\Usuario\\Source\\Repos\\EventosApi\\EventosApi\\EventosApi.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\Usuario\\source\\repos\\EventosApi\\EventosApi\\EventosApi.csproj",
+        "projectUniqueName": "C:\\Users\\Usuario\\Source\\Repos\\EventosApi\\EventosApi\\EventosApi.csproj",
         "projectName": "EventosApi",
-        "projectPath": "C:\\Users\\Usuario\\source\\repos\\EventosApi\\EventosApi\\EventosApi.csproj",
+        "projectPath": "C:\\Users\\Usuario\\Source\\Repos\\EventosApi\\EventosApi\\EventosApi.csproj",
         "packagesPath": "C:\\Users\\Usuario\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\Usuario\\source\\repos\\EventosApi\\EventosApi\\obj\\",
+        "outputPath": "C:\\Users\\Usuario\\Source\\Repos\\EventosApi\\EventosApi\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\Usuario\\AppData\\Roaming\\NuGet\\NuGet.Config",

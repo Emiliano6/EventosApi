@@ -4,6 +4,7 @@ using EventosApi;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace EventosApi.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20230520184257_elim")]
+    partial class elim
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -21,21 +24,6 @@ namespace EventosApi.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
-
-            modelBuilder.Entity("EventoOrganizador", b =>
-                {
-                    b.Property<int>("EventosEventoId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("OrganizadoresOrganizadorId")
-                        .HasColumnType("int");
-
-                    b.HasKey("EventosEventoId", "OrganizadoresOrganizadorId");
-
-                    b.HasIndex("OrganizadoresOrganizadorId");
-
-                    b.ToTable("EventoOrganizador");
-                });
 
             modelBuilder.Entity("EventosApi.Data.Evento", b =>
                 {
@@ -58,11 +46,7 @@ namespace EventosApi.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("OrganizadorId")
-                        .HasColumnType("int");
-
                     b.Property<string>("Ubicacion")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int?>("UsuarioId")
@@ -91,7 +75,7 @@ namespace EventosApi.Migrations
                     b.Property<string>("Correo")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("EventoId")
+                    b.Property<int?>("EventoId")
                         .HasColumnType("int");
 
                     b.Property<string>("Nombre")
@@ -104,6 +88,8 @@ namespace EventosApi.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("OrganizadorId");
+
+                    b.HasIndex("EventoId");
 
                     b.HasIndex("UsuarioId");
 
@@ -135,21 +121,6 @@ namespace EventosApi.Migrations
                     b.ToTable("Usuarios");
                 });
 
-            modelBuilder.Entity("EventoOrganizador", b =>
-                {
-                    b.HasOne("EventosApi.Data.Evento", null)
-                        .WithMany()
-                        .HasForeignKey("EventosEventoId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("EventosApi.Data.Organizador", null)
-                        .WithMany()
-                        .HasForeignKey("OrganizadoresOrganizadorId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
             modelBuilder.Entity("EventosApi.Data.Evento", b =>
                 {
                     b.HasOne("EventosApi.Data.Usuario", null)
@@ -163,9 +134,20 @@ namespace EventosApi.Migrations
 
             modelBuilder.Entity("EventosApi.Data.Organizador", b =>
                 {
+                    b.HasOne("EventosApi.Data.Evento", "Evento")
+                        .WithMany("Organizadores")
+                        .HasForeignKey("EventoId");
+
                     b.HasOne("EventosApi.Data.Usuario", null)
                         .WithMany("seguidos")
                         .HasForeignKey("UsuarioId");
+
+                    b.Navigation("Evento");
+                });
+
+            modelBuilder.Entity("EventosApi.Data.Evento", b =>
+                {
+                    b.Navigation("Organizadores");
                 });
 
             modelBuilder.Entity("EventosApi.Data.Usuario", b =>

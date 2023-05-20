@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "iNJiq+kQd8BtmS8iUX+/cOKJSG3nLBzB4r+4VLMvj95mcfCJlSjw7IHk7yjCwGrG5wCsbuiYfNp6vaRt78kqEA==",
+  "dgSpecHash": "4rHqfeEvlB8rE44w5e47guLAlb+OZ5NtJIeYqJ54FHWtUSIuv0EYEDGkNLt6WWVzHuwjwRN7Ls2nTkqkOkVlSQ==",
   "success": true,
-  "projectFilePath": "C:\\Users\\Usuario\\source\\repos\\EventosApi\\EventosApi\\EventosApi.csproj",
+  "projectFilePath": "C:\\Users\\Usuario\\Source\\Repos\\EventosApi\\EventosApi\\EventosApi.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\Usuario\\.nuget\\packages\\azure.core\\1.24.0\\azure.core.1.24.0.nupkg.sha512",
     "C:\\Users\\Usuario\\.nuget\\packages\\azure.identity\\1.6.0\\azure.identity.1.6.0.nupkg.sha512",
