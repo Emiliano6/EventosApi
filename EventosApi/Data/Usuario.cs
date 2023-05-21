@@ -12,7 +12,7 @@ namespace EventosApi.Data
 
         public List<Evento> Favoritos { get; set; } = new List<Evento>();
 
-       // public List<Evento> Historial { get; set; } = new List<Evento>();
+        public List<Evento> Historial { get; set; } = new List<Evento>();
 
         public List<Organizador> seguidos { get; set; } = new List<Organizador>();
 

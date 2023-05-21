@@ -39,6 +39,21 @@ namespace EventosApi.Migrations
 
             modelBuilder.Entity("EventoUsuario", b =>
                 {
+                    b.Property<int>("HistorialEventoId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("RegistradosUsuarioId")
+                        .HasColumnType("int");
+
+                    b.HasKey("HistorialEventoId", "RegistradosUsuarioId");
+
+                    b.HasIndex("RegistradosUsuarioId");
+
+                    b.ToTable("EventoUsuarioRegistrado", (string)null);
+                });
+
+            modelBuilder.Entity("EventoUsuario1", b =>
+                {
                     b.Property<int>("FavoritosEventoId")
                         .HasColumnType("int");
 
@@ -49,7 +64,29 @@ namespace EventosApi.Migrations
 
                     b.HasIndex("UsuarioFavoritosUsuarioId");
 
-                    b.ToTable("EventoUsuario");
+                    b.ToTable("UsuarioEventoFavorito", (string)null);
+                });
+
+            modelBuilder.Entity("EventosApi.Data.Asistencia", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("AsistenciaEvento")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("EventoId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("UsuarioId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Asistencias");
                 });
 
             modelBuilder.Entity("EventosApi.Data.Evento", b =>
@@ -69,6 +106,9 @@ namespace EventosApi.Migrations
                     b.Property<string>("Descripcion")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("EspaciosDisponibles")
+                        .HasColumnType("int");
 
                     b.Property<DateTime>("Fecha")
                         .HasColumnType("datetime2");
@@ -122,6 +162,9 @@ namespace EventosApi.Migrations
                     b.Property<string>("CodigoPromocion")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("EventoId")
+                        .HasColumnType("int");
 
                     b.Property<float>("descuento")
                         .HasColumnType("real");
@@ -187,6 +230,21 @@ namespace EventosApi.Migrations
                 });
 
             modelBuilder.Entity("EventoUsuario", b =>
+                {
+                    b.HasOne("EventosApi.Data.Evento", null)
+                        .WithMany()
+                        .HasForeignKey("HistorialEventoId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("EventosApi.Data.Usuario", null)
+                        .WithMany()
+                        .HasForeignKey("RegistradosUsuarioId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("EventoUsuario1", b =>
                 {
                     b.HasOne("EventosApi.Data.Evento", null)
                         .WithMany()

@@ -13,6 +13,19 @@ namespace EventosApi
         public DbSet<Organizador> Organizadores { get; set; }
 
         public DbSet<Promocion> Promociones { get; set; }
+        public DbSet<Asistencia> Asistencias { get; set; }
 
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+              modelBuilder.Entity<Evento>()
+                .HasMany(e => e.Registrados)
+                .WithMany(u => u.Historial)
+                .UsingEntity(j => j.ToTable("EventoUsuarioRegistrado"));
+
+            modelBuilder.Entity<Usuario>()
+                .HasMany(u => u.Favoritos)
+                .WithMany(e => e.UsuarioFavoritos)
+                .UsingEntity(j => j.ToTable("UsuarioEventoFavorito"));
+        }
     }
 }

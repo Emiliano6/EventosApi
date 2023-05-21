@@ -1,11 +1,11 @@
+using EventosApi.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using System.Text.Json.Serialization;
 
 namespace EventosApi
 {
- public class Startup
-    {
+ public class Startup { 
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
@@ -13,7 +13,9 @@ namespace EventosApi
         public IConfiguration Configuration { get; }
 
         public void ConfigureServices(IServiceCollection services)
+            
         {
+            services.AddScoped<EventoService>();
             services.AddControllers().AddJsonOptions(x =>
             x.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles);
             services.AddControllers();

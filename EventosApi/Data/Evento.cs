@@ -7,10 +7,12 @@ public class Evento{
     public string Ubicacion { get; set; }
     public int Capacidad_Maxima { get; set; }
     public float Costo {get; set; }
+    public int EspaciosDisponibles { get; set; }
     public List<Organizador> Organizadores { get; set; } = new List<Organizador>();
 
     public List<Usuario> UsuarioFavoritos { get; set; } = new List<Usuario>();
-    //public List<Usuario> Historial { get; set; } = new List<Usuario>();
+    
+    public List<Usuario> Registrados { get; set; } = new List<Usuario>();
    
 }
     

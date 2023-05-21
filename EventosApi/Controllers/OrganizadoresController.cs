@@ -60,7 +60,13 @@
 
         }
 
-        [HttpPost("Promociones")]
+        [HttpGet("Promociones")]
+        public async Task<ActionResult<List<Promocion>>> GetPromociones()
+        {
+            return await context.Promociones.ToListAsync();
+        }
+
+        [HttpPost("AgregarPromociones")]
         public async Task<ActionResult<Promocion>> Post(Promocion Promocion)
         {
             context.Add(Promocion);
@@ -68,17 +74,18 @@
             return Ok(Promocion);
         }
 
-        [HttpDelete("EliminarPromo")]
-        public IActionResult EliminarPromocion(int PromocionId)
+        [HttpDelete("EliminarPromociones")]
+        public async Task<ActionResult> DeletePromocion(int PromocionId)
         {
-            var exists = context.Promociones.AnyAsync(x => x.PromocionId == PromocionId);
-            if (exists == null)
+            var exists = await context.Promociones.AnyAsync(x => x.PromocionId == PromocionId);
+
+            if (!exists )
             {
                 return NotFound("La promocion no fue encontrada");
             }
 
             context.Remove(new Promocion { PromocionId = PromocionId });
-            context.SaveChangesAsync();
+            context.SaveChanges();
             return Ok();
 
         }

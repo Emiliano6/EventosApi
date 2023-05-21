@@ -4,6 +4,7 @@ namespace EventosApi.Controllers{
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.EntityFrameworkCore;
     using Microsoft.EntityFrameworkCore.Query;
+    using Microsoft.Extensions.Logging;
 
     [ApiController]
     [Route("api/eventos")]
@@ -63,8 +64,18 @@ namespace EventosApi.Controllers{
             return Ok(eventos);
         }
 
+        [HttpGet("EventosPopulares")]
+        public IActionResult GetEventosPopulares()
+        {
+            var eventosPopulares = context.Eventos.OrderByDescending(e => e.Registrados.Count()).Take(3).ToList();
+
+            return Ok(eventosPopulares);
+        }
+
         [HttpPost]
         public async Task<ActionResult<Evento>> Post(Evento evento){
+
+            evento.EspaciosDisponibles = evento.Capacidad_Maxima;
             context.Add(evento);
             await context.SaveChangesAsync();
             return Ok(evento);
@@ -158,5 +169,80 @@ namespace EventosApi.Controllers{
 
         }
 
+        [HttpPost("Registro")]
+        public IActionResult RegistrarUsuarioEnEvento(int usuarioId, int eventoId, string? CodigoPromocion = null)
+        {
+            var usuario = context.Usuarios.FirstOrDefault(u => u.UsuarioId == usuarioId);
+            var evento = context.Eventos.Include(o=>o.Registrados).FirstOrDefault(e => e.EventoId == eventoId);
+            
+
+            if (usuario == null || evento == null)
+            {
+                return NotFound("El usuario o el evento no existen");
+            }
+
+            if (evento.EspaciosDisponibles <= 0)
+            {
+                return BadRequest("No hay espacios disponibles en el evento");
+            }
+
+            if (evento.Registrados.Any(u => u.UsuarioId == usuarioId))
+            {
+                return BadRequest("El usuario ya está registrado en el evento");
+            }
+
+            float costoTotal = evento.Costo;
+
+            if (!string.IsNullOrEmpty(CodigoPromocion))
+            {
+                var promocion = context.Promociones.FirstOrDefault(p => p.CodigoPromocion == CodigoPromocion);
+
+                if (promocion != null && promocion.EventoId == eventoId)
+                {
+                    costoTotal = costoTotal*promocion.descuento;
+                }
+            }
+
+            Asistencia asistencia = new Asistencia();
+            asistencia.EventoId = eventoId;
+            asistencia.UsuarioId = usuarioId;
+            asistencia.AsistenciaEvento = true;
+            context.Asistencias.Add(asistencia);
+
+            evento.EspaciosDisponibles--;
+            evento.Registrados.Add(usuario);
+            context.SaveChanges();
+
+            return Ok($"Registro exitoso. Costo total: {costoTotal}");
+        }
+
+        [HttpDelete("CancelarRegistro")]
+        public async Task<ActionResult> DeleteRegistro(int UsuarioId, int EventoId)
+        {
+            
+            var evento =  context.Eventos.Include(o => o.Registrados).FirstOrDefault(e => e.EventoId == EventoId);
+            if (evento == null)
+            {
+                return NotFound("El evento no fue encontrado");
+            }
+            var usuario = context.Usuarios.FirstOrDefault(u => u.UsuarioId == UsuarioId);
+            var usuarioEnEvento = evento.Registrados.FirstOrDefault(u => u.UsuarioId == UsuarioId);
+            if (usuario == null)
+            {
+                return NotFound("El usuario no fue encontrado");
+            }
+
+            if (usuarioEnEvento == null)
+            {
+                return BadRequest("El usuario no está registrado en el evento");
+            }
+            var asistencia = await context.Asistencias.FirstOrDefaultAsync(a => a.EventoId == EventoId && a.UsuarioId == UsuarioId);
+
+            evento.EspaciosDisponibles++;
+            context.Asistencias.Remove(asistencia);
+            evento.Registrados.Remove(usuarioEnEvento);
+            await context.SaveChangesAsync();
+            return Ok("Se elimino el registro al evento");
+        }
     }
 }

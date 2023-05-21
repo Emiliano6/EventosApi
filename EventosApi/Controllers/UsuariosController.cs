@@ -51,8 +51,8 @@ namespace EventosApi.Controllers
 
         }
 
-        [HttpGet("Seguidos/{UsuarioId}")]
-        public async Task<ActionResult<List<Evento>>> Get(int UsuarioId)
+        [HttpGet("/Favoritos/{UsuarioId}")]
+        public async Task<ActionResult<List<Evento>>> GetFavoritos(int UsuarioId)
         {
             var usuario = await context.Usuarios.Include(u => u.Favoritos).FirstOrDefaultAsync(u => u.UsuarioId == UsuarioId);
 
@@ -120,8 +120,8 @@ namespace EventosApi.Controllers
             return Ok("Evento eliminado de favoritos exitosamente");
         }
 
-        [HttpGet("Favoritos/{UsuarioId}")]
-        public async Task<ActionResult<List<Organizador>>> Get(int UsuarioId,int us)
+        [HttpGet("/Seguidos/{UsuarioId}")]
+        public async Task<ActionResult<List<Organizador>>> GetSeguidos(int UsuarioId)
         {
             var usuario =  await context.Usuarios.Include(u => u.seguidos).FirstOrDefaultAsync(u => u.UsuarioId == UsuarioId);
 
@@ -203,5 +203,35 @@ namespace EventosApi.Controllers
         return Ok();
 
         }
+
+        [HttpGet("/Historial/{UsuarioId}")]
+        public async Task<ActionResult<List<Evento>>> GetHistorial(int UsuarioId)
+        {
+            var usuario = await context.Usuarios.Include(u => u.Historial).FirstOrDefaultAsync(u => u.UsuarioId == UsuarioId);
+            
+            if (usuario == null)
+            {
+                return NotFound("El usuario no existe");
+            }
+            var eventosHistoricos = usuario.Historial.Select(e => new
+            {
+                Evento = e,
+                Asistencia = context.Asistencias.FirstOrDefault(a => a.UsuarioId == UsuarioId && a.EventoId == e.EventoId)
+            }).ToList();
+
+            var resultado = eventosHistoricos.Select(e => new
+            {
+                e.Evento.EventoId,
+                e.Evento.Nombre_Evento,
+                e.Evento.Descripcion,
+                e.Evento.Fecha,
+                e.Evento.Ubicacion,
+                e.Evento.Costo,
+                Asistencia = e.Asistencia != null ? e.Asistencia.AsistenciaEvento : false
+            }).ToList();
+
+            return Ok(resultado);
+        }
     }
+
 }
