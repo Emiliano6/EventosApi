@@ -51,7 +51,7 @@ namespace EventosApi.Controllers
 
         }
 
-        [HttpGet("Favoritos")]
+        [HttpGet("Seguidos/{UsuarioId}")]
         public async Task<ActionResult<List<Evento>>> Get(int UsuarioId)
         {
             var usuario = await context.Usuarios.Include(u => u.Favoritos).FirstOrDefaultAsync(u => u.UsuarioId == UsuarioId);
@@ -65,7 +65,7 @@ namespace EventosApi.Controllers
         }
     
 
-        [HttpPut("Agregar Favoritos")]
+        [HttpPost("Agregar Favoritos")]
         public IActionResult AgregarFavorito(int UsuarioId, int EventoId)
         {
             var usuario = context.Usuarios.Include(o => o.Favoritos).FirstOrDefault(o => o.UsuarioId == UsuarioId);
@@ -120,10 +120,10 @@ namespace EventosApi.Controllers
             return Ok("Evento eliminado de favoritos exitosamente");
         }
 
-        [HttpGet("Seguidos")]
-        public async Task<ActionResult<List<Organizador>>> Get(int UsuarioId, int eee)
+        [HttpGet("Favoritos/{UsuarioId}")]
+        public async Task<ActionResult<List<Organizador>>> Get(int UsuarioId,int us)
         {
-            var usuario = await context.Usuarios.Include(u => u.seguidos).FirstOrDefaultAsync(u => u.UsuarioId == UsuarioId);
+            var usuario =  await context.Usuarios.Include(u => u.seguidos).FirstOrDefaultAsync(u => u.UsuarioId == UsuarioId);
 
             if (usuario == null)
             {
@@ -134,7 +134,7 @@ namespace EventosApi.Controllers
         }
 
 
-        [HttpPut("Seguir organizador")]
+        [HttpPost("Seguir organizador")]
         public IActionResult SeguirOrganizador(int UsuarioId, int OrganizadorId)
         {
             var usuario = context.Usuarios.Include(o => o.seguidos).FirstOrDefault(o => o.UsuarioId == UsuarioId);

@@ -6,6 +6,7 @@ public class Evento{
     public DateTime Fecha { get; set; }
     public string Ubicacion { get; set; }
     public int Capacidad_Maxima { get; set; }
+    public float Costo {get; set; }
     public List<Organizador> Organizadores { get; set; } = new List<Organizador>();
 
     public List<Usuario> UsuarioFavoritos { get; set; } = new List<Usuario>();

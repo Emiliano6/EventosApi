@@ -44,8 +44,8 @@
             return Ok();
 
         }
-
-        [HttpDelete("{OrganizadorId}")]
+        
+        [HttpDelete("/{OrganizadorId}")]
         public async Task<ActionResult> Delete(int OrganizadorId)
         {
             var exists = await context.Organizadores.AnyAsync(x => x.OrganizadorId == OrganizadorId);
@@ -59,5 +59,29 @@
             return Ok();
 
         }
+
+        [HttpPost("Promociones")]
+        public async Task<ActionResult<Promocion>> Post(Promocion Promocion)
+        {
+            context.Add(Promocion);
+            await context.SaveChangesAsync();
+            return Ok(Promocion);
+        }
+
+        [HttpDelete("EliminarPromo")]
+        public IActionResult EliminarPromocion(int PromocionId)
+        {
+            var exists = context.Promociones.AnyAsync(x => x.PromocionId == PromocionId);
+            if (exists == null)
+            {
+                return NotFound("La promocion no fue encontrada");
+            }
+
+            context.Remove(new Promocion { PromocionId = PromocionId });
+            context.SaveChangesAsync();
+            return Ok();
+
+        }
+
     }
 }
