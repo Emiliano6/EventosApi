@@ -12,6 +12,5 @@ namespace EventosApi
         public DbSet<Usuario> Usuarios { get; set; }
         public DbSet<Organizador> Organizadores { get; set; }
 
-        
     }
 }

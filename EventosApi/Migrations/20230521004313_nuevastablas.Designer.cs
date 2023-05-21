@@ -4,6 +4,7 @@ using EventosApi;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace EventosApi.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20230521004313_nuevastablas")]
+    partial class nuevastablas
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -35,21 +38,6 @@ namespace EventosApi.Migrations
                     b.HasIndex("OrganizadoresOrganizadorId");
 
                     b.ToTable("EventoOrganizador");
-                });
-
-            modelBuilder.Entity("EventoUsuario", b =>
-                {
-                    b.Property<int>("FavoritosEventoId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("UsuarioFavoritosUsuarioId")
-                        .HasColumnType("int");
-
-                    b.HasKey("FavoritosEventoId", "UsuarioFavoritosUsuarioId");
-
-                    b.HasIndex("UsuarioFavoritosUsuarioId");
-
-                    b.ToTable("EventoUsuario");
                 });
 
             modelBuilder.Entity("EventosApi.Data.Evento", b =>
@@ -78,7 +66,17 @@ namespace EventosApi.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int?>("UsuarioId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("UsuarioId1")
+                        .HasColumnType("int");
+
                     b.HasKey("EventoId");
+
+                    b.HasIndex("UsuarioId");
+
+                    b.HasIndex("UsuarioId1");
 
                     b.ToTable("Eventos");
                 });
@@ -103,7 +101,12 @@ namespace EventosApi.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int?>("UsuarioId")
+                        .HasColumnType("int");
+
                     b.HasKey("OrganizadorId");
+
+                    b.HasIndex("UsuarioId");
 
                     b.ToTable("Organizadores");
                 });
@@ -133,21 +136,6 @@ namespace EventosApi.Migrations
                     b.ToTable("Usuarios");
                 });
 
-            modelBuilder.Entity("OrganizadorUsuario", b =>
-                {
-                    b.Property<int>("SeguidoresUsuarioId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("seguidosOrganizadorId")
-                        .HasColumnType("int");
-
-                    b.HasKey("SeguidoresUsuarioId", "seguidosOrganizadorId");
-
-                    b.HasIndex("seguidosOrganizadorId");
-
-                    b.ToTable("OrganizadorUsuario");
-                });
-
             modelBuilder.Entity("EventoOrganizador", b =>
                 {
                     b.HasOne("EventosApi.Data.Evento", null)
@@ -163,34 +151,31 @@ namespace EventosApi.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("EventoUsuario", b =>
+            modelBuilder.Entity("EventosApi.Data.Evento", b =>
                 {
-                    b.HasOne("EventosApi.Data.Evento", null)
-                        .WithMany()
-                        .HasForeignKey("FavoritosEventoId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                    b.HasOne("EventosApi.Data.Usuario", null)
+                        .WithMany("Favoritos")
+                        .HasForeignKey("UsuarioId");
 
                     b.HasOne("EventosApi.Data.Usuario", null)
-                        .WithMany()
-                        .HasForeignKey("UsuarioFavoritosUsuarioId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .WithMany("Historial")
+                        .HasForeignKey("UsuarioId1");
                 });
 
-            modelBuilder.Entity("OrganizadorUsuario", b =>
+            modelBuilder.Entity("EventosApi.Data.Organizador", b =>
                 {
                     b.HasOne("EventosApi.Data.Usuario", null)
-                        .WithMany()
-                        .HasForeignKey("SeguidoresUsuarioId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .WithMany("seguidos")
+                        .HasForeignKey("UsuarioId");
+                });
 
-                    b.HasOne("EventosApi.Data.Organizador", null)
-                        .WithMany()
-                        .HasForeignKey("seguidosOrganizadorId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+            modelBuilder.Entity("EventosApi.Data.Usuario", b =>
+                {
+                    b.Navigation("Favoritos");
+
+                    b.Navigation("Historial");
+
+                    b.Navigation("seguidos");
                 });
 #pragma warning restore 612, 618
         }

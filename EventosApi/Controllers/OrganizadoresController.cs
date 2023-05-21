@@ -12,38 +12,52 @@
         {
             this.context = context;
         }
+
         [HttpGet]
         public async Task<ActionResult<List<Organizador>>> Get()
         {
             return await context.Organizadores.ToListAsync();
         }
 
-        /*[HttpPost]
+        [HttpPost]
         public async Task<ActionResult<Organizador>> Post(Organizador organizador)
         {
             context.Add(organizador);
             await context.SaveChangesAsync();
             return Ok(organizador);
-        }*/
+        }
 
-        [HttpPost]
-        public async Task<ActionResult<Organizador>> CrearOrganizador(int EventoId,[FromBody] Organizador Organizador)
+        [HttpPut("{OrganizadorId:int}")]
+        public async Task<ActionResult> Put(Organizador Organizador, int OrganizadorId)
         {
-            var evento = await context.Eventos.FindAsync(EventoId);
-
-            if (evento == null)
+            var exists = await context.Organizadores.AnyAsync(x => x.OrganizadorId == OrganizadorId);
+            if (!exists)
             {
-                return NotFound("El evento no existe");
+                return NotFound("El organizador no fue encontrado");
+            }
+            if (Organizador.OrganizadorId != OrganizadorId)
+            {
+                return BadRequest("El id del organizador no coincide con el de la url");
+            }
+            context.Update(Organizador);
+            await context.SaveChangesAsync();
+            return Ok();
+
+        }
+
+        [HttpDelete("{OrganizadorId}")]
+        public async Task<ActionResult> Delete(int OrganizadorId)
+        {
+            var exists = await context.Organizadores.AnyAsync(x => x.OrganizadorId == OrganizadorId);
+            if (!exists)
+            {
+                return NotFound("El organizador no fue encontrado");
             }
 
-            Organizador.EventoId = EventoId;
-            evento.Organizadores.Add(Organizador);
-            context.Add(Organizador);
-
+            context.Remove(new Organizador { OrganizadorId = OrganizadorId });
             await context.SaveChangesAsync();
+            return Ok();
 
-            return Ok(Organizador);
-            //return CreatedAtAction("GetOrganizador", new { id = nuevoOrganizador.OrganizadorId }, nuevoOrganizador);
         }
     }
 }
