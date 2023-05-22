@@ -8,6 +8,7 @@ public class Evento{
     public int Capacidad_Maxima { get; set; }
     public float Costo {get; set; }
     public int EspaciosDisponibles { get; set; }
+    public bool CorreoEnviado { get; set; }
     public List<Organizador> Organizadores { get; set; } = new List<Organizador>();
 
     public List<Usuario> UsuarioFavoritos { get; set; } = new List<Usuario>();

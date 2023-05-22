@@ -2,63 +2,73 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System.Net.Mail;
-using MailKit.Net.Smtp;
-using MailKit.Security;
-using MimeKit;
+using System.Net;
+using EventosApi.Migrations;
+using System.Diagnostics;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace EventosApi.Services
 {
-    public class EventoService
+    public class EventoService : BackgroundService
     {
-        private readonly ApplicationDbContext context;
+        private readonly IServiceProvider _serviceProvider;
+        //private readonly ApplicationDbContext context;
+        private SmtpClient smtpClient;
+        public IConfiguration Configuration { get; }
+        private readonly ILogger<EventoService> _logger;
 
-        public EventoService(ApplicationDbContext context)
+        public EventoService( IConfiguration configuration, IServiceProvider serviceProvider, ILogger<EventoService> logger)
         {
-            this.context = context;
+            //this.context = context;
+            _serviceProvider = serviceProvider;
+            _logger = logger;
+            Configuration = configuration;
+            smtpClient = new SmtpClient("smtp.zoho.com")
+            {
+                Port = 587,
+                Credentials = new NetworkCredential(Configuration["Email:Address"], Configuration["Email:Password"]),
+                EnableSsl = true,
+            };
+            _logger = logger;
         }
-        private void EnviarCorreosrecordatorios()
+        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            // Obtener el evento próximo en función de la fecha actual
-            Evento eventoProximo = context.Eventos.Where(e => e.Fecha > DateTime.Now).OrderBy(e => e.Fecha).FirstOrDefault();
-
-            if (eventoProximo == null)
+            while (!stoppingToken.IsCancellationRequested)
             {
-                return; // No hay eventos próximos
+                _logger.LogInformation("El servicio EventoService ha comenzado.");
+                using (var scope = _serviceProvider.CreateScope())
+                {
+                    var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+                    var eventos = context.Eventos.Include(a => a.Organizadores).ToList();
+                    DateTime hoy = DateTime.Now;
+                    DateTime mañana = DateTime.Now.AddDays(1);
+                    foreach (var evento in eventos)
+                    {
+                        if (evento.Fecha == mañana && evento.CorreoEnviado == false)
+                        {
+                            var mailMessage = new MailMessage
+                            {
+                                From = new MailAddress(Configuration["Email:Address"]),
+                                Subject = string.Format("Evento proximo"),
+                                Body = string.Format("Hola, el evento {0} es el dia de mañana, te esperamos", evento.Nombre_Evento),
+                                IsBodyHtml = false,
+                            };
+                            var usuarios = context.Eventos.Include(e => e.Registrados).FirstOrDefault(o => o.EventoId == evento.EventoId);
+                            foreach (var usuario in evento.Registrados)
+                            {
+                                mailMessage.To.Add(new MailAddress(usuario.Correo));
+                            }
+                            smtpClient.Send(mailMessage);
+                            evento.CorreoEnviado = true;
+                        }
+                    }
+                    await context.SaveChangesAsync();
+                }
+                _logger.LogInformation("El servicio EventoService ha completado un ciclo de ejecución.");
+                await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
             }
-
-            // Obtener la lista de participantes del evento próximo desde la base de datos
-            List<Usuario> participantes = eventoProximo.Registrados.ToList();
-
-            // Calcular la fecha de envío del correo (días antes del comienzo del evento)
-            DateTime fechaEnvio = eventoProximo.Fecha.AddDays(-3); // Por ejemplo, se enviará el correo 3 días antes del evento
-
-            // Verificar si la fecha de envío del correo ya ha pasado
-            if (fechaEnvio < DateTime.Now)
-            {
-                return; // No se enviará el correo si la fecha ya ha pasado
-            }
-
-            // Preparar el correo electrónico
-            var message = new MimeMessage();
-            message.From.Add(new MailboxAddress("Eventos UANL", "tucorreo@gmail.com")); // Dirección de correo electrónico del remitente
-            foreach (var participante in participantes)
-            {
-                message.To.Add(new MailboxAddress(participante.Nombre, participante.Correo)); // Agregar la dirección de correo electrónico del participante como destinatario
-            }
-            message.Subject = "Recordatorio de evento: " + eventoProximo.Nombre_Evento; // Asunto del correo
-
-            var bodyBuilder = new BodyBuilder();
-            bodyBuilder.HtmlBody = "Estimado participante, te recordamos que el evento '" + eventoProximo.Nombre_Evento + "' se llevará a cabo el día " + eventoProximo.Fecha.ToString("dd/MM/yyyy") + ". ¡Esperamos contar con tu presencia!"; // Cuerpo del correo
-            message.Body = bodyBuilder.ToMessageBody();
-
-            // Configurar el cliente SMTP y enviar el correo
-            using (var client = new MailKit.Net.Smtp.SmtpClient())
-            {
-                client.Connect("smtp.gmail.com", 587, false); // Servidor SMTP que utilizarás (en este ejemplo, se utiliza Gmail)
-                client.Authenticate("2023backend@gmail.com", "bBackend!"); // Credenciales de tu cuenta de correo electrónico
-                client.Send(message);
-                client.Disconnect(true);
-            }
+            _logger.LogInformation("El servicio EventoService ha finalizado.");
         }
     }
  }

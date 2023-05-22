@@ -15,7 +15,6 @@ namespace EventosApi
         public void ConfigureServices(IServiceCollection services)
             
         {
-            services.AddScoped<EventoService>();
             services.AddControllers().AddJsonOptions(x =>
             x.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles);
             services.AddControllers();
@@ -28,6 +27,8 @@ namespace EventosApi
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "EventosApi", Version = "v1" });
             });
+            services.AddLogging();
+            services.AddHostedService<EventoService>();
         }
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
