@@ -7,6 +7,7 @@ namespace EventosApi.Controllers{
     using Microsoft.EntityFrameworkCore;
     using Microsoft.EntityFrameworkCore.Query;
     using Microsoft.Extensions.Logging;
+    using Microsoft.IdentityModel.Tokens;
     using System.Net;
     using System.Net.Mail;
 
@@ -48,32 +49,11 @@ namespace EventosApi.Controllers{
             }
 
             var eventos = context.Eventos.Include(a => a.Organizadores).ToList();
-            //DateTime hoy = DateTime.Now;
-            //DateTime mañana = DateTime.Now.AddDays(1);
 
             if (eventos.Count == 0)
             {
                 return NotFound("El evento no fue encontrado");
             }
-            /*foreach (var evento in eventos)
-            {
-                if (evento.Fecha == mañana)
-                {
-                    var mailMessage = new MailMessage
-                    {
-                        From = new MailAddress(Configuration["Email:Address"]),
-                        Subject = string.Format("Evento proximo"),
-                        Body = string.Format("Hola, el evento {0} es el dia de mañana, te esperamos", evento.Nombre_Evento),
-                        IsBodyHtml = false,
-                    };
-                    var usuarios = context.Eventos.Include(e => e.Registrados).FirstOrDefault(o => o.EventoId == evento.EventoId);
-                    foreach (var usuario in evento.Registrados)
-                    {
-                        mailMessage.To.Add(new MailAddress(usuario.Correo));
-                    }
-                    smtpClient.Send(mailMessage);
-                }
-            }*/
             
             return Ok(eventos);
         }
@@ -259,29 +239,38 @@ namespace EventosApi.Controllers{
             return Ok("Se elimino el registro al evento");
         }
 
-        /*[HttpPost("EnviarCorreoRecordatorio")]
-        public async Task<IActionResult> EnviarCorreoRecordatorio(int eventoId, int diasAntes)
+        [HttpPost("/EnviarFormulario")]
+        public IActionResult EnviarFormulario(int EventoId, string nombre, string correo, string mensaje)
         {
-            var evento = await context.Eventos
-                .Include(e => e.Registrados)
-                .FirstOrDefaultAsync(e => e.EventoId == eventoId);
+            // Construir el mensaje de correo
+            var evento = context.Eventos.Include(o=>o.Organizadores).FirstOrDefault(e => e.EventoId == EventoId);
             if (evento == null)
             {
-                return NotFound("El evento no existe");
+                return NotFound("El evento al cual quieres enviar comentarios o sugerencias no existe"); // Manejar el caso si el evento no existe
             }
-            var fechaInicioEvento = evento.Fecha;
-            var fechaRecordatorio = fechaInicioEvento.AddDays(-diasAntes);
 
-            var usuariosRegistrados = evento.Registrados;
-
-            foreach (var usuario in usuariosRegistrados)
+            if (!evento.Organizadores.Any())
             {
-                // Aquí puedes personalizar el contenido del correo electrónico con los detalles del evento
-                var mensaje = $"Estimado {usuario.Nombre},\n\nTe recordamos que el evento {evento.Nombre_Evento} está programado para el día {fechaInicioEvento.ToShortDateString()}. No olvides asistir y disfrutar del evento.\n\nSaludos,\nEquipo de EventosApi";
-
-                await emailService.SendEmailAsync(usuario.Correo, "Recordatorio de Evento", mensaje);
+                return NotFound("Parece que aun no hay organizadores para ese evento");
             }
-            return Ok("Correos de recordatorio enviados correctamente");
-        }*/
+            
+            var mailMessage = new MailMessage
+            {
+                From = new MailAddress(Configuration["Email:Address"]),
+                Subject = "Dudas o sugerencias",
+                Body = $"Nombre: {nombre}\nCorreo electrónico: {correo}\nMensaje: {mensaje}\nEvento relacionado: {evento.Nombre_Evento}",
+                IsBodyHtml = false
+            };
+
+            foreach (var organizador in evento.Organizadores)
+            {
+                mailMessage.To.Add(new MailAddress(organizador.Correo));
+            }
+           
+            // Enviar el correo electrónico
+            smtpClient.Send(mailMessage);
+
+            return Ok("Formulario Enviado");
+        }
     }
 }

@@ -51,8 +51,8 @@ namespace EventosApi.Services
                         if (usuarios.Any())
                         {
                             await EnviarCorreoAsync(evento, usuarios);
-                            evento.CorreoEnviado = true;
                         }
+                        evento.CorreoEnviado = true;
                     }
 
                     await context.SaveChangesAsync();
@@ -77,7 +77,7 @@ namespace EventosApi.Services
             {
                 From = new MailAddress(Configuration["Email:Address"]),
                 Subject = "Evento próximo",
-                Body = $"Hola, el evento {evento.Nombre_Evento} es mañana. ¡Te esperamos!",
+                Body = $"Hola,\n Recuerda que el evento {evento.Nombre_Evento} es mañana. ¡Te esperamos!",
                 IsBodyHtml = false
             };
 
