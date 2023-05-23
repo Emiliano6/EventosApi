@@ -1,7 +1,9 @@
+using AutoMapper;
 using EventosApi.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using System.Text.Json.Serialization;
+using EventosApi.Mapper;
 
 namespace EventosApi
 {
@@ -22,6 +24,7 @@ namespace EventosApi
             services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
 
+            
             services.AddEndpointsApiExplorer();
             services.AddSwaggerGen(c=>
             {
@@ -29,6 +32,8 @@ namespace EventosApi
             });
             services.AddLogging();
             services.AddHostedService<EventoService>();
+            services.AddAutoMapper(typeof(MapperCode));
+            //services.AddSingleton<IMapper>(mapper => new Mapper(mapper.GetRequiredService<AutoMapper.IConfigurationProvider>(), mapper.GetService));
         }
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {

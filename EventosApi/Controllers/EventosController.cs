@@ -1,24 +1,29 @@
-namespace EventosApi.Controllers{
-    using EventosApi.Data;
-    using EventosApi.Migrations;
-    using EventosApi.Services;
-    using Microsoft.AspNetCore.Connections.Features;
-    using Microsoft.AspNetCore.Mvc;
-    using Microsoft.EntityFrameworkCore;
-    using Microsoft.EntityFrameworkCore.Query;
-    using Microsoft.Extensions.Logging;
-    using Microsoft.IdentityModel.Tokens;
-    using System.Net;
-    using System.Net.Mail;
+using AutoMapper;
+using EventosApi.Data;
+using EventosApi.DTOs;
+using EventosApi.Migrations;
+using EventosApi.Services;
+using Microsoft.AspNetCore.Connections.Features;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Query;
+using Microsoft.Extensions.Logging;
+using Microsoft.IdentityModel.Tokens;
+using Org.BouncyCastle.Crypto;
+using System.Net;
+using System.Net.Mail;
 
+namespace EventosApi.Controllers{
     [ApiController]
     [Route("api/eventos")]
     public class EventosController : ControllerBase{
         private readonly ApplicationDbContext context;
         public IConfiguration Configuration { get; }
         private SmtpClient smtpClient;
-        public EventosController(ApplicationDbContext context, IConfiguration configuration){
+        private readonly IMapper mapper;
+        public EventosController(ApplicationDbContext context, IConfiguration configuration, IMapper mapper){
             this.context = context;
+            this.mapper = mapper;
             Configuration = configuration;
             smtpClient = new SmtpClient("smtp.zoho.com")
             {
@@ -67,9 +72,10 @@ namespace EventosApi.Controllers{
         }
 
         [HttpPost]
-        public async Task<ActionResult<Evento>> Post(Evento evento){
+        public async Task<ActionResult<EventoDTO>> Post(EventoDTO eventoDTO){
 
-            evento.EspaciosDisponibles = evento.Capacidad_Maxima;
+            
+            var evento = mapper.Map<Evento>(eventoDTO);
             context.Add(evento);
             await context.SaveChangesAsync();
             return Ok(evento);
