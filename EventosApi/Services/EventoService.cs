@@ -1,75 +1,92 @@
 ﻿using EventosApi.Data;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
-using System.Net.Mail;
-using System.Net;
-using EventosApi.Migrations;
-using System.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using System;
+using System.Linq;
+using System.Net;
+using System.Net.Mail;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace EventosApi.Services
 {
     public class EventoService : BackgroundService
     {
         private readonly IServiceProvider _serviceProvider;
-        //private readonly ApplicationDbContext context;
-        private SmtpClient smtpClient;
-        public IConfiguration Configuration { get; }
         private readonly ILogger<EventoService> _logger;
+        private SmtpClient smtpClient;
 
-        public EventoService( IConfiguration configuration, IServiceProvider serviceProvider, ILogger<EventoService> logger)
+        public IConfiguration Configuration { get; }
+
+        public EventoService(IServiceProvider serviceProvider, ILogger<EventoService> logger,IConfiguration configuration)
         {
-            //this.context = context;
             _serviceProvider = serviceProvider;
             _logger = logger;
             Configuration = configuration;
-            smtpClient = new SmtpClient("smtp.zoho.com")
-            {
-                Port = 587,
-                Credentials = new NetworkCredential(Configuration["Email:Address"], Configuration["Email:Password"]),
-                EnableSsl = true,
-            };
-            _logger = logger;
+            
         }
+
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
+            _logger.LogInformation("El servicio EventoService ha comenzado.");
+
             while (!stoppingToken.IsCancellationRequested)
             {
-                _logger.LogInformation("El servicio EventoService ha comenzado.");
                 using (var scope = _serviceProvider.CreateScope())
                 {
                     var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
-                    var eventos = context.Eventos.Include(a => a.Organizadores).ToList();
-                    DateTime hoy = DateTime.Now;
-                    DateTime mañana = DateTime.Now.AddDays(1);
+                    var eventos = context.Eventos
+                        .Include(a => a.Organizadores)
+                        .Include(e => e.Registrados)
+                        .Where(e => e.Fecha.Date == DateTime.Today.AddDays(1) && !e.CorreoEnviado)
+                        .ToList();
+
                     foreach (var evento in eventos)
                     {
-                        if (evento.Fecha == mañana && evento.CorreoEnviado == false)
+                        var usuarios = evento.Registrados.Select(u => u.Correo).ToList();
+
+                        if (usuarios.Any())
                         {
-                            var mailMessage = new MailMessage
-                            {
-                                From = new MailAddress(Configuration["Email:Address"]),
-                                Subject = string.Format("Evento proximo"),
-                                Body = string.Format("Hola, el evento {0} es el dia de mañana, te esperamos", evento.Nombre_Evento),
-                                IsBodyHtml = false,
-                            };
-                            var usuarios = context.Eventos.Include(e => e.Registrados).FirstOrDefault(o => o.EventoId == evento.EventoId);
-                            foreach (var usuario in evento.Registrados)
-                            {
-                                mailMessage.To.Add(new MailAddress(usuario.Correo));
-                            }
-                            smtpClient.Send(mailMessage);
+                            await EnviarCorreoAsync(evento, usuarios);
                             evento.CorreoEnviado = true;
                         }
                     }
+
                     await context.SaveChangesAsync();
                 }
-                _logger.LogInformation("El servicio EventoService ha completado un ciclo de ejecución.");
+
                 await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
             }
+
             _logger.LogInformation("El servicio EventoService ha finalizado.");
         }
+
+        private async Task EnviarCorreoAsync(Evento evento, List<string> destinatarios)
+        {
+            var smtpClient = new SmtpClient("smtp.zoho.com")
+            {
+                Port = 587,
+                Credentials = new NetworkCredential(Configuration["Email:Address"], Configuration["Email:Password"]),
+                EnableSsl = true
+            };
+
+            var mailMessage = new MailMessage
+            {
+                From = new MailAddress(Configuration["Email:Address"]),
+                Subject = "Evento próximo",
+                Body = $"Hola, el evento {evento.Nombre_Evento} es mañana. ¡Te esperamos!",
+                IsBodyHtml = false
+            };
+
+            foreach (var destinatario in destinatarios)
+            {
+                mailMessage.To.Add(new MailAddress(destinatario));
+            }
+
+            await smtpClient.SendMailAsync(mailMessage);
+        }
     }
- }
-    
+}
