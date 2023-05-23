@@ -1,6 +1,8 @@
 ﻿namespace EventosApi.Controllers
 {
+    using AutoMapper;
     using EventosApi.Data;
+    using EventosApi.DTOs;
     using Microsoft.AspNetCore.DataProtection;
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.EntityFrameworkCore;
@@ -14,11 +16,13 @@
         private readonly ApplicationDbContext context;
         public IConfiguration Configuration { get; }
         private SmtpClient smtpClient;
+        private readonly IMapper mapper;
 
-        public OrganizadoresController(ApplicationDbContext context, IConfiguration configuration)
+        public OrganizadoresController(ApplicationDbContext context, IConfiguration configuration, IMapper mapper)
         {
             this.context = context;
             Configuration = configuration;
+            this.mapper = mapper;
             smtpClient = new SmtpClient("smtp.zoho.com")
             {
                 Port = 587,
@@ -28,14 +32,17 @@
         }
 
         [HttpGet]
-        public async Task<ActionResult<List<Organizador>>> Get()
+        public async Task<ActionResult<List<GetOrganizadorDTO>>> Get()
         {
-            return await context.Organizadores.ToListAsync();
+            var organizadores = context.Organizadores.Include(e=>e.Eventos).ToList();
+            var organizadorDTO = mapper.Map<List<GetOrganizadorDTO>>(organizadores);
+            return Ok(organizadorDTO);
         }
 
         [HttpPost]
-        public async Task<ActionResult<Organizador>> Post(Organizador organizador)
+        public async Task<ActionResult<OrganizadorDTO>> Post(OrganizadorDTO organizadorDTO)
         {
+            var organizador = mapper.Map<Organizador>(organizadorDTO);
             context.Add(organizador);
             await context.SaveChangesAsync();
             return Ok(organizador);

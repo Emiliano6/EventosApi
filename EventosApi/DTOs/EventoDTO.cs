@@ -26,18 +26,8 @@ namespace EventosApi.DTOs
 
         [Required(ErrorMessage = "El campo {0} es requerido")]
         public float Costo { get; set; }
+        [Required(ErrorMessage = "El campo {0} es requerido")]
         public int EspaciosDisponibles { get; set; }
-
-        public EventoDTO(Evento evento)
-        {
-            Nombre_Evento = evento.Nombre_Evento;
-            Descripcion = evento.Descripcion;
-            Fecha = evento.Fecha;
-            Ubicacion = evento.Ubicacion;
-            Capacidad_Maxima = evento.Capacidad_Maxima;
-            Costo = evento.Costo;
-            EspaciosDisponibles = evento.Capacidad_Maxima;
-        }
 
     }
 }

@@ -9,8 +9,12 @@ namespace EventosApi.Mapper
     {
         public MapperCode() 
         {
-            CreateMap<Evento, EventoDTO>().ReverseMap();
-
+            CreateMap<EventoDTO, Evento>();
+            CreateMap<Evento, GetEventoDTOUsuario>().ForMember(orga =>orga.Organizadores, opt => opt.MapFrom(src => src.Organizadores));
+            CreateMap<OrganizadorDTO, Organizador>();
+            CreateMap<Organizador, GetOrganizadorDTO>().ForMember(e =>e.Eventos, opt => opt.MapFrom(src => src.Eventos));
+            CreateMap<Organizador, OrganizadorDTOEnEvento>();
+            CreateMap<Evento, EventoDTOEnOrganizador>();
         }
         
     }

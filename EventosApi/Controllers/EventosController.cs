@@ -10,6 +10,8 @@ using Microsoft.EntityFrameworkCore.Query;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using Org.BouncyCastle.Crypto;
+using System.Diagnostics;
+using System.Diagnostics.Eventing.Reader;
 using System.Net;
 using System.Net.Mail;
 
@@ -33,8 +35,37 @@ namespace EventosApi.Controllers{
             };
         }
 
-
         [HttpGet("Busqueda por Nombre, Fecha, Ubicación o general")]
+        public async Task<ActionResult<IEnumerable<GetEventoDTOUsuario>>> Get([FromQuery] string? Nombre_Evento, [FromQuery] DateTime? Fecha, [FromQuery] string? Ubicacion)
+        {
+            IQueryable<Evento> query = context.Eventos;
+
+            if (!string.IsNullOrEmpty(Nombre_Evento))
+            {
+                query = query.Where(x => x.Nombre_Evento.Contains(Nombre_Evento));
+            }
+            if (Fecha.HasValue)
+            {
+                query = query.Where(x => x.Fecha.Date == Fecha.Value.Date);
+            }
+            if (!string.IsNullOrEmpty(Ubicacion))
+            {
+                query = query.Where(x => x.Ubicacion.Contains(Ubicacion));
+            }
+
+            var eventos = await query.Include(a => a.Organizadores).ToListAsync();
+
+            if (eventos.Count == 0)
+            {
+                return NotFound("El evento no fue encontrado");
+            }
+
+            var eventosDTO = mapper.Map<List<GetEventoDTOUsuario>>(eventos);
+
+            return eventosDTO;
+        }
+
+        /*[HttpGet("Busqueda por Nombre, Fecha, Ubicación o general")]
         public async Task<ActionResult<IEnumerable<Evento>>> Get([FromQuery] string? Nombre_Evento, [FromQuery] DateTime? Fecha, [FromQuery] string? Ubicacion)
         {
             IQueryable<Evento> query = context.Eventos;
@@ -59,15 +90,17 @@ namespace EventosApi.Controllers{
             {
                 return NotFound("El evento no fue encontrado");
             }
-            
-            return Ok(eventos);
-        }
+            var eventosDTO = mapper.Map<List<GetEventoDTOUsuario>>(eventos);
+
+            return eventosDTO;
+        }*/
 
         [HttpGet("EventosPopulares")]
         public IActionResult GetEventosPopulares()
         {
             var eventosPopulares = context.Eventos.OrderByDescending(e => e.Registrados.Count()).Take(3).ToList();
 
+            var eventosDTO = mapper.Map<List<GetEventoDTOUsuario>>(eventosPopulares);
             return Ok(eventosPopulares);
         }
 

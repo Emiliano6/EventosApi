@@ -2,7 +2,7 @@
 
 namespace EventosApi.Controllers
 {
-    
+    using AutoMapper;
     using EventosApi.Data;
     using EventosApi.Migrations;
     using Microsoft.AspNetCore.Mvc;
@@ -13,9 +13,11 @@ namespace EventosApi.Controllers
     public class UsuariosController : ControllerBase
     {
         private readonly ApplicationDbContext context;
-        public UsuariosController(ApplicationDbContext context)
+        private readonly IMapper mapper;
+        public UsuariosController(ApplicationDbContext context, IMapper mapper)
         {
             this.context = context;
+            this.mapper = mapper;
         }
 
         [HttpGet]
