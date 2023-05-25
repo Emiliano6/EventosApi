@@ -179,3 +179,5 @@ C:\Users\Usuario\Source\Repos\EventosApi\EventosApi\bin\Debug\net6.0\System.Secu
 C:\Users\Usuario\Source\Repos\EventosApi\EventosApi\bin\Debug\net6.0\runtimes\win\lib\net6.0\System.Security.Cryptography.Pkcs.dll
 C:\Users\Usuario\Source\Repos\EventosApi\EventosApi\bin\Debug\net6.0\AutoMapper.dll
 C:\Users\Usuario\Source\Repos\EventosApi\EventosApi\bin\Debug\net6.0\AutoMapper.Extensions.Microsoft.DependencyInjection.dll
+C:\Users\Usuario\Source\Repos\EventosApi\EventosApi\bin\Debug\net6.0\Microsoft.AspNetCore.Authentication.JwtBearer.dll
+C:\Users\Usuario\Source\Repos\EventosApi\EventosApi\bin\Debug\net6.0\Microsoft.AspNetCore.Identity.EntityFrameworkCore.dll

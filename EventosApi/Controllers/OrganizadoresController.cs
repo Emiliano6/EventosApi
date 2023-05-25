@@ -31,7 +31,7 @@
             };
         }
 
-        [HttpGet]
+        [HttpGet("Organizadores")]
         public async Task<ActionResult<List<GetOrganizadorDTO>>> Get()
         {
             var organizadores = context.Organizadores.Include(e=>e.Eventos).ToList();
@@ -39,7 +39,15 @@
             return Ok(organizadorDTO);
         }
 
-        [HttpPost]
+        [HttpGet("Promociones")]
+        public async Task<ActionResult<List<GetPromocionDTO>>> GetPromociones()
+        {
+            var promociones = context.Promociones.ToList();
+            var promocionesDTO = mapper.Map<List<GetPromocionDTO>>(promociones);
+            return Ok(promocionesDTO);
+        }
+
+        [HttpPost("Agregar organizador")]
         public async Task<ActionResult<OrganizadorDTO>> Post(OrganizadorDTO organizadorDTO)
         {
             var organizador = mapper.Map<Organizador>(organizadorDTO);
@@ -48,25 +56,55 @@
             return Ok(organizador);
         }
 
-        [HttpPut("{OrganizadorId:int}")]
-        public async Task<ActionResult> Put(Organizador Organizador, int OrganizadorId)
+        [HttpPost("Agregar promocion")]
+        public async Task<ActionResult<PromocionDTO>> Post(PromocionDTO PromocionDTO)
+        {
+
+            var mailMessage = new MailMessage
+            {
+                From = new MailAddress(Configuration["Email:Address"]),
+                Subject = string.Format("Hay una nueva promocion para el evento al que te registraste"),
+                Body = string.Format("Hola, hay una nueva promocion, se llama {0} y tiene un descuento de {1}% sobre el total de tu pago.", PromocionDTO.CodigoPromocion, ((1 - PromocionDTO.descuento) * 100).ToString("0.00")),
+                IsBodyHtml = false,
+            };
+            var usuarios = context.Eventos.Include(e => e.Registrados).FirstOrDefault(o => o.EventoId == PromocionDTO.EventoId);
+            if (usuarios == null)
+            {
+                return NotFound("El evento que ingresaste no existe");
+            }
+            if (!usuarios.Registrados.Any())
+            {
+                return NotFound("Parece que aun no hay usuarios registrados en el evento");
+            }
+            foreach (var usuario in usuarios.Registrados)
+            {
+                mailMessage.To.Add(new MailAddress(usuario.Correo));
+            }
+            var promocion = mapper.Map<Promocion>(PromocionDTO);
+            smtpClient.Send(mailMessage);
+            context.Add(promocion);
+            await context.SaveChangesAsync();
+            return Ok(promocion);
+        }
+
+        [HttpPut("Editar organizador")]
+        public async Task<ActionResult> Put(OrganizadorDTO OrganizadorDTO, int OrganizadorId)
         {
             var exists = await context.Organizadores.AnyAsync(x => x.OrganizadorId == OrganizadorId);
             if (!exists)
             {
                 return NotFound("El organizador no fue encontrado");
             }
-            if (Organizador.OrganizadorId != OrganizadorId)
-            {
-                return BadRequest("El id del organizador no coincide con el de la url");
-            }
-            context.Update(Organizador);
+            var organizador = mapper.Map<Organizador>(OrganizadorDTO);
+            organizador.OrganizadorId = OrganizadorId;
+
+            context.Update(organizador);
             await context.SaveChangesAsync();
             return Ok();
 
         }
         
-        [HttpDelete("/{OrganizadorId}")]
+        [HttpDelete("Eliminar organizador")]
         public async Task<ActionResult> Delete(int OrganizadorId)
         {
             var exists = await context.Organizadores.AnyAsync(x => x.OrganizadorId == OrganizadorId);
@@ -81,36 +119,7 @@
 
         }
 
-        [HttpGet("Promociones")]
-        public async Task<ActionResult<List<Promocion>>> GetPromociones()
-        {
-            return await context.Promociones.ToListAsync();
-        }
-
-        [HttpPost("AgregarPromociones")]
-        public async Task<ActionResult<Promocion>> Post(Promocion Promocion)
-        {
-
-            var mailMessage = new MailMessage
-            {
-                From = new MailAddress(Configuration["Email:Address"]),
-                Subject = string.Format("Hay una nueva promocion para el evento al que te registraste"),
-                Body = string.Format("Hola, hay una nueva promocion, se llama {0} y tiene un descuento de {1}% sobre el total de tu pago.", Promocion.CodigoPromocion,((1-Promocion.descuento)*100).ToString("0.00")),
-                IsBodyHtml = false,
-            };
-            var usuarios = context.Eventos.Include(e=>e.Registrados).FirstOrDefault(o => o.EventoId == Promocion.EventoId);
-            foreach (var usuario in usuarios.Registrados)
-            {
-                mailMessage.To.Add(new MailAddress(usuario.Correo));
-            }
-
-            smtpClient.Send(mailMessage);
-            context.Add(Promocion);
-            await context.SaveChangesAsync();
-            return Ok(Promocion);
-        }
-
-        [HttpDelete("EliminarPromociones")]
+        [HttpDelete("Eliminar promocion")]
         public async Task<ActionResult> DeletePromocion(int PromocionId)
         {
             var exists = await context.Promociones.AnyAsync(x => x.PromocionId == PromocionId);
