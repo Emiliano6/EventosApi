@@ -20,7 +20,8 @@ using System.Net.Mail;
 namespace EventosApi.Controllers{
     [ApiController]
     [Route("api/eventos")]
-    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = "EsAdmin")]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    
     public class EventosController : ControllerBase{
         private readonly ApplicationDbContext context;
         public IConfiguration Configuration { get; }
@@ -37,6 +38,7 @@ namespace EventosApi.Controllers{
                 EnableSsl = true,
             };
         }
+
         [AllowAnonymous]
         [HttpGet("Busqueda por Nombre, Fecha, Ubicación o general")]
         public async Task<ActionResult<IEnumerable<GetEventoDTOUsuario>>> Get([FromQuery] string? Nombre_Evento, [FromQuery] DateTime? Fecha, [FromQuery] string? Ubicacion)
@@ -78,6 +80,7 @@ namespace EventosApi.Controllers{
         }
 
         [HttpPost("Agregar Evento")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = "EsAdminOEsOrganizador")]
         public async Task<ActionResult<EventoDTO>> Post(EventoDTO eventoDTO){
 
             
@@ -86,8 +89,9 @@ namespace EventosApi.Controllers{
             await context.SaveChangesAsync();
             return Ok(evento);
         }
-
+        
         [HttpPost("Agregar Organizador a Evento")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = "EsAdminOEsOrganizador")]
         public IActionResult AgregarOrganizadorAEvento(int EventoId, int OrganizadorId)
         {
             var evento = context.Eventos.Include(e => e.Organizadores).FirstOrDefault(c => c.EventoId == EventoId);
@@ -115,6 +119,13 @@ namespace EventosApi.Controllers{
                 Body = string.Format("Hola, el organizador {0} al que sigues acaba de crear un nuevo evento.\n Ingresa a nuestra pagina para más información", organizador.Nombre),
                 IsBodyHtml = false,
             };
+            if (!usuarios.Any())
+            {
+                evento.Organizadores.Add(organizador);
+                context.SaveChanges();
+                return Ok("Organizador agregado al evento exitosamente");
+            }
+
             foreach (var usuario in usuarios)
             {
                 mailMessage.To.Add(new MailAddress(usuario.Correo));
@@ -127,6 +138,7 @@ namespace EventosApi.Controllers{
         }
 
         [HttpPost("Registrarse a un evento")]
+        
         public IActionResult RegistrarUsuarioEnEvento(int usuarioId, int eventoId, string? CodigoPromocion = null)
         {
             var usuario = context.Usuarios.FirstOrDefault(u => u.UsuarioId == usuarioId);
@@ -208,6 +220,7 @@ namespace EventosApi.Controllers{
         }
 
         [HttpPut("Editar evento")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = "EsAdminOEsOrganizador")]
         public async Task<ActionResult> Put(EventoDTO EventoDTO, int EventoId)
         {
             var exists = await context.Eventos.AnyAsync(x => x.EventoId == EventoId);
@@ -225,6 +238,7 @@ namespace EventosApi.Controllers{
         }
 
         [HttpDelete("Eliminar evento")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = "EsAdminOEsOrganizador")]
         public async Task<ActionResult> Delete(int EventoId)
         {
             var exists = await context.Eventos.AnyAsync(x => x.EventoId == EventoId);
@@ -241,6 +255,7 @@ namespace EventosApi.Controllers{
 
 
         [HttpDelete("Eliminar Organizador de Evento")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = "EsAdminOEsOrganizador")]
         public IActionResult EliminarOrganizadordeEvento(int EventoId,int OrganizadorId)
         {
             var evento = context.Eventos.Include(e => e.Organizadores).FirstOrDefault(c => c.EventoId == EventoId);
@@ -296,7 +311,5 @@ namespace EventosApi.Controllers{
             await context.SaveChangesAsync();
             return Ok("Se elimino el registro al evento");
         }
-
-        
     }
 }

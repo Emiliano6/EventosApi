@@ -6,11 +6,14 @@ namespace EventosApi.Controllers
     using EventosApi.Data;
     using EventosApi.DTOs;
     using EventosApi.Migrations;
+    using Microsoft.AspNetCore.Authentication.JwtBearer;
+    using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.EntityFrameworkCore;
 
     [ApiController]
     [Route("api/Usuario")]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public class UsuariosController : ControllerBase
     {
         private readonly ApplicationDbContext context;
@@ -20,8 +23,9 @@ namespace EventosApi.Controllers
             this.context = context;
             this.mapper = mapper;
         }
-
+        
         [HttpGet]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = "EsAdmin")]
         public async Task<ActionResult<List<GetUsuarioDTO>>> Get()
         {
             var usuarios = context.Usuarios.ToList();
@@ -149,8 +153,6 @@ namespace EventosApi.Controllers
             return Ok("Ya estas siguiendo al organizador");
         }
 
-        
-
         [HttpPut("Editar usuario")]
         public async Task<ActionResult> Put(UsuarioDTO UsuarioDTO, int UsuarioId)
         {
@@ -167,8 +169,9 @@ namespace EventosApi.Controllers
             return Ok(usuario);
 
         }
-
+        
         [HttpDelete("Eliminar usuario")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = "EsAdmin")]
         public async Task<ActionResult> Delete(int UsuarioId)
         {
             var exists = await context.Usuarios.AnyAsync(x => x.UsuarioId == UsuarioId);

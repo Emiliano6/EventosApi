@@ -3,6 +3,8 @@
     using AutoMapper;
     using EventosApi.Data;
     using EventosApi.DTOs;
+    using Microsoft.AspNetCore.Authentication.JwtBearer;
+    using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.DataProtection;
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.EntityFrameworkCore;
@@ -12,6 +14,7 @@
 
     [ApiController]
     [Route("api/organizadores")]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public class OrganizadoresController : ControllerBase{
         private readonly ApplicationDbContext context;
         public IConfiguration Configuration { get; }
@@ -31,6 +34,7 @@
             };
         }
 
+        [AllowAnonymous]
         [HttpGet("Organizadores")]
         public async Task<ActionResult<List<GetOrganizadorDTO>>> Get()
         {
@@ -39,15 +43,18 @@
             return Ok(organizadorDTO);
         }
 
+        [AllowAnonymous]
         [HttpGet("Promociones")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         public async Task<ActionResult<List<GetPromocionDTO>>> GetPromociones()
         {
             var promociones = context.Promociones.ToList();
             var promocionesDTO = mapper.Map<List<GetPromocionDTO>>(promociones);
             return Ok(promocionesDTO);
         }
-
+        
         [HttpPost("Agregar organizador")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = "EsAdminOEsOrganizador")]
         public async Task<ActionResult<OrganizadorDTO>> Post(OrganizadorDTO organizadorDTO)
         {
             var organizador = mapper.Map<Organizador>(organizadorDTO);
@@ -57,9 +64,10 @@
         }
 
         [HttpPost("Agregar promocion")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = "EsAdminOEsOrganizador")]
         public async Task<ActionResult<PromocionDTO>> Post(PromocionDTO PromocionDTO)
         {
-
+            var promocion = mapper.Map<Promocion>(PromocionDTO);
             var mailMessage = new MailMessage
             {
                 From = new MailAddress(Configuration["Email:Address"]),
@@ -74,13 +82,14 @@
             }
             if (!usuarios.Registrados.Any())
             {
-                return NotFound("Parece que aun no hay usuarios registrados en el evento");
+                context.Add(promocion);
+                await context.SaveChangesAsync();
+                return Ok(promocion);
             }
             foreach (var usuario in usuarios.Registrados)
             {
                 mailMessage.To.Add(new MailAddress(usuario.Correo));
             }
-            var promocion = mapper.Map<Promocion>(PromocionDTO);
             smtpClient.Send(mailMessage);
             context.Add(promocion);
             await context.SaveChangesAsync();
@@ -88,6 +97,7 @@
         }
 
         [HttpPut("Editar organizador")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = "EsAdminOEsOrganizador")]
         public async Task<ActionResult> Put(OrganizadorDTO OrganizadorDTO, int OrganizadorId)
         {
             var exists = await context.Organizadores.AnyAsync(x => x.OrganizadorId == OrganizadorId);
@@ -105,6 +115,7 @@
         }
         
         [HttpDelete("Eliminar organizador")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = "EsAdmin")]
         public async Task<ActionResult> Delete(int OrganizadorId)
         {
             var exists = await context.Organizadores.AnyAsync(x => x.OrganizadorId == OrganizadorId);
@@ -120,6 +131,7 @@
         }
 
         [HttpDelete("Eliminar promocion")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = "EsAdminOEsOrganizador")]
         public async Task<ActionResult> DeletePromocion(int PromocionId)
         {
             var exists = await context.Promociones.AnyAsync(x => x.PromocionId == PromocionId);
@@ -132,8 +144,6 @@
             context.Remove(new Promocion { PromocionId = PromocionId });
             context.SaveChanges();
             return Ok();
-
         }
-
     }
 }

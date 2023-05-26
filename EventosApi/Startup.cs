@@ -77,6 +77,10 @@ namespace EventosApi
                 opciones.AddPolicy("EsAdmin", politica => politica.RequireClaim("esAdmin"));
                 opciones.AddPolicy("EsOrganizador", politica => politica.RequireClaim("esOrganizador"));
                 opciones.AddPolicy("EsAlumno", politica => politica.RequireClaim("esUsuario"));
+                opciones.AddPolicy("EsAdminOEsOrganizador", politica => politica.RequireAssertion(context =>
+                {
+                    return context.User.HasClaim("esAdmin", "1") || context.User.HasClaim("esOrganizador", "1");
+                }));
             });
 
 
